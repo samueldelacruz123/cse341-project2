@@ -38,8 +38,6 @@ app.use((req, res, next) => {
 // Enable CORS
 app.use(cors({ methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']}));
 app.use(cors({ origin: '*'}));
-// Routes
-app.use('/', require('./routes'));
 
 passport.use(new GitHubStrategy({
   clientID: process.env.GITHUB_CLIENT_ID,
@@ -58,7 +56,7 @@ passport.deserializeUser((user, done) => {
   done(null, user);
 })
 
-app.get('/', (req, res) => { res.send(req.session.user !== undefined ? `Logged in as ${req.session.user.displayName}` : "Logged out")});
+app.get('/', (req, res) => { res.send(req.session.user !== undefined ? `Logged in as ${req.session.user.displayName || req.session.user.username}` : "Logged out")});
 
 app.get('/github/callback', passport.authenticate('github', {
   failureRedirect: '/api-docs', session: false}),
@@ -66,6 +64,9 @@ app.get('/github/callback', passport.authenticate('github', {
     req.session.user = req.user;
     res.redirect('/');
   });
+
+// Routes
+app.use('/', require('./routes'));
 
 // Database
 mongodb.initDb((err) => {
